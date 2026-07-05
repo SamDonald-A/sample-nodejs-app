@@ -24,7 +24,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
 
           script: |
-            cd /home/ubuntu/my-app
+            cd /home/ubuntu/sample-nodejs-app
             git pull
             docker compose down
             docker compose up --build -d
