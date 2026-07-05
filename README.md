@@ -72,6 +72,7 @@ By completing this lab, you will learn how to:
 * Use Docker Compose
 * View logs
 * Stop and remove containers
+* Verify
 
 ---
 
