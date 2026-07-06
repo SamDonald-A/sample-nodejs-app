@@ -334,4 +334,217 @@ Once the application is running:
 
 This project is intended for beginners who are getting started with Docker and Docker Compose. Experiment with the Dockerfiles, rebuild images after making changes, and explore Docker commands to strengthen your understanding of containerized applications.
 
-## CI/CD Pipeline setup also Included
+# CI/CD Pipeline Setup using GitHub Actions
+
+## Architecture
+
+```
+Developer
+     │
+     │ git push
+     ▼
+GitHub Repository
+     │
+     │ GitHub Actions Trigger
+     ▼
+GitHub Actions Runner
+     │
+     │ SSH
+     ▼
+EC2 Instance
+     │
+     ├── git pull
+     ├── docker compose build
+     └── docker compose up -d
+```
+
+---
+
+# Step 1: Create the GitHub Repository
+
+* Create a new GitHub repository.
+* Push your application code to the **main** branch.
+
+---
+
+# Step 2: Launch an EC2 Instance
+
+* Launch an Ubuntu EC2 instance.
+* Install:
+
+  * Git
+  * Docker
+  * Docker Compose
+* Clone your application repository.
+
+```bash
+git clone https://github.com/<username>/sample-nodejs-app.git
+cd sample-nodejs-app
+```
+
+Verify the application runs manually.
+
+```bash
+docker compose up --build -d
+```
+
+---
+
+# Step 3: Create GitHub Actions Workflow
+
+Inside the repository create:
+
+```
+.github/
+└── workflows/
+    └── deploy.yml
+```
+
+Paste the following workflow:
+
+```yaml
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+            cd /home/ubuntu/sample-nodejs-app
+            git pull origin main
+            docker compose up --build -d
+```
+
+---
+
+# Step 4: Configure GitHub Secrets
+
+Open your GitHub repository.
+
+**Settings → Secrets and Variables → Actions**
+
+Create the following repository secrets.
+
+| Secret Name  | Value                              |
+| ------------ | ---------------------------------- |
+| EC2_HOST     | Public IP of the EC2 instance      |
+| EC2_USERNAME | ubuntu                             |
+| EC2_SSH_KEY  | Contents of the `.pem` private key |
+
+---
+
+# Step 5: Copy the Required Information
+
+You will need the following:
+
+### EC2 Public IP
+
+Example:
+
+```
+54.xx.xx.xx
+```
+
+### Username
+
+```
+ubuntu
+```
+
+### Private Key (.pem)
+
+Open the `.pem` file using a text editor.
+
+Copy the complete content:
+
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+Paste this entire content into the `EC2_SSH_KEY` GitHub secret.
+
+---
+
+# Step 6: Commit and Push the Workflow
+
+```bash
+git add .
+git commit -m "Added GitHub Actions deployment pipeline"
+git push origin main
+```
+
+---
+
+# Step 7: Pipeline Trigger
+
+Whenever code is pushed to the **main** branch:
+
+1. GitHub detects the push.
+2. GitHub Actions starts automatically.
+3. The runner connects to the EC2 instance using SSH.
+4. It navigates to the project directory.
+5. Pulls the latest code.
+6. Rebuilds Docker images.
+7. Restarts the containers.
+
+Deployment is now complete.
+
+---
+
+# Deployment Flow
+
+```
+Developer
+    │
+    │ git push
+    ▼
+GitHub Repository
+    │
+    ▼
+GitHub Actions
+    │
+    │ SSH
+    ▼
+EC2 Server
+    │
+    ├── git pull
+    ├── docker compose build
+    └── docker compose up -d
+    │
+    ▼
+Updated Application
+```
+
+---
+
+# Advantages
+
+* Fully automated deployment
+* No manual SSH login required
+* Consistent deployment process
+* Faster delivery of application updates
+* Reduced deployment errors
+* Easy rollback using Git history
+
