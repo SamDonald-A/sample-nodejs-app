@@ -333,3 +333,5 @@ Once the application is running:
 ## Happy Learning!
 
 This project is intended for beginners who are getting started with Docker and Docker Compose. Experiment with the Dockerfiles, rebuild images after making changes, and explore Docker commands to strengthen your understanding of containerized applications.
+
+## CI/CD Pipeline setup also Included
